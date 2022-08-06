@@ -1,0 +1,123 @@
+<!DOCTYPE HTML>
+<html>
+<head><title>Gauge Meter</title>
+<body id="test" onload="drawGauge()">
+<canvas id="myCanvas" width="900" height="300"></canvas><br>
+Gauge&nbsp;|&nbsp;<a href="bargraph.htm">Bar Graph</a>&nbsp;|&nbsp;<a href="analog.htm">Analog Analyser</a>&nbsp;|&nbsp;<a href="digital.htm">Digital Analyser</a>
+<br><br><b>Test without Arduino; set values by below entries</b><br>
+A1:<input id="needleVal1" type="text" value="300" />
+A2:<input id="needleVal2" type="text" value="100" />
+A3: <input id="needleVal3" type="text" value="1023" />&nbsp;<input type="button" value="set values" onClick="GetArduinoInputs()" /><br > 
+<script type="text/javascript">
+
+function GetArduinoInputs(){ //DEMO
+	updateNeedle(parseInt(document.getElementById('needleVal1').value),
+	parseInt(document.getElementById('needleVal2').value),
+	parseInt(document.getElementById('needleVal3').value));
+}
+
+var canvas = document.getElementById('myCanvas');
+var ctx = canvas.getContext('2d');
+myCanvas.style.border = "red 1px solid";
+
+function drawGauge(){updateNeedle(0, 0, 0); GetArduinoInputs();}
+
+function drawOutline(){
+	for(cnt=0; cnt<3; cnt++){
+		ctx.beginPath();
+		ctx.arc(150+cnt*300, 150, 80, 0.3 * Math.PI, 0, true);
+		ctx.lineWidth = 8;
+		ctx.strokeStyle = '#ff0000';
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.arc(150+cnt*300, 150, 80, 0, 0.7 * Math.PI, true);
+		ctx.lineWidth = 8;
+		ctx.strokeStyle = '#ffff00';
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.arc(150+cnt*300, 150, 80, 1.7 * Math.PI, 0.7 * Math.PI, true);
+		ctx.lineWidth = 8;
+		ctx.strokeStyle = '#00ff00';
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.arc(150+cnt*300, 150, 95, 0, 2 * Math.PI, true);
+		ctx.lineWidth = 15;
+		ctx.strokeStyle = '#003300';
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.arc(150+cnt*300, 150, 100, 0, 2 * Math.PI, true);
+		ctx.lineWidth = 2;
+		ctx.strokeStyle = '#888888';
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.arc(150+cnt*300, 150, 5, 0, 2 * Math.PI, true);
+		ctx.fillStyle = 'red';
+		ctx.fill();
+		ctx.lineWidth = 4;
+		ctx.strokeStyle = 'red';
+		ctx.stroke();
+	}
+}
+	 
+function updateNeedle(val1, val2, val3){//update gauge 
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	ctx.shadowColor = '#999'; //shadow effect
+	ctx.shadowBlur = 30;
+	ctx.shadowOffsetX = 10;
+	ctx.shadowOffsetY = 10;	drawOutline();
+	drawPlot(1, val1);
+	drawPlot(2, val2);
+	drawPlot(3, val3);
+}
+
+function drawTicks(radX, deg){ // draw tickmarks in dial
+	var deg = (deg+126) * Math.PI/180;
+	var tickX = radX+(Math.cos(deg))*75;
+	var tickY = 150+(Math.sin(deg))*75;
+	var tickXa = radX+(Math.cos(deg))*65;
+	var tickYa = 150+(Math.sin(deg))*65;
+	ctx.save();
+	ctx.lineWidth = 1;
+	ctx.strokeStyle = 'blue';
+	ctx.beginPath();
+	ctx.moveTo(tickXa, tickYa);
+	ctx.lineTo(tickX, tickY);
+	ctx.stroke();
+	ctx.restore();
+}
+
+function drawPlot(gaugeSel, val){ //draw selected gauge with its needle value
+	var radX=150;
+	deg = val * 2.88/10.23+126;
+	deg = deg * Math.PI/180;
+	switch(gaugeSel){
+		case 2: radX=radX + 300; break;
+		case 3: radX=radX + 600; break;
+		default: break;	
+	}
+	var tickX = radX+(Math.cos(deg))*75;
+	var tickY = 150+(Math.sin(deg))*75;
+	var tickXa = radX-(Math.cos(deg))*15;
+	var tickYa = 150-(Math.sin(deg))*15;
+	ctx.beginPath();
+	ctx.moveTo(tickXa, tickYa);
+	ctx.lineTo(tickX, tickY);
+	ctx.lineWidth = 4;
+	ctx.strokeStyle = 'red';
+
+	ctx.stroke();
+	for(cnt2=0; cnt2<17; cnt2++) drawTicks(radX, 18*cnt2); //tickmarks
+	ctx.font = "24px Arial";
+	ctx.fillStyle = "blue";
+	ctx.textAlign = "center";
+	ctx.fillText(Math.round(val),gaugeSel*300-150,220);	// Dial value box	
+	ctx.fillText("Sensor"+gaugeSel,gaugeSel*300-150,120);	//Dial Name
+	ctx.beginPath();
+	ctx.rect(gaugeSel*300-178,197,58,30);
+	ctx.lineWidth = 2;
+	ctx.strokeStyle = '#aaaaaa';
+	ctx.stroke();	
+}
+</script>
+</body>
+</html>

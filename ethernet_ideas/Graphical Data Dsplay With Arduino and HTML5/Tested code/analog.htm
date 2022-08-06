@@ -1,0 +1,128 @@
+<!DOCTYPE HTML>
+<html>
+<head><title>Arduino Analog Input Analyser</title>
+<style>
+span{position:absolute; left:540px; top:50px;}
+</style></head>
+<body id="test" onload="drawGraph();">
+<canvas id="myCanvas" width="570" height="300"></canvas>
+<menu id="menu_items" >
+<div >
+<span style="left:60px;"><input type="checkbox" id="c0" value="Connect" checked><label for="c0" style="color:#ff0000">A0</label></span>
+<span style="left:110px;"><input type="checkbox" id="c1" value="Connect"><label for="c1" style="color:#00ff00">A1</label></span>
+<span style="left:160px;"><input type="checkbox" id="c2" value="Connect"><label for="c2" style="color:#0000ff">A2</label></span>
+<span style="left:210px;"><input type="checkbox" id="c3" value="Connect"><label for="c3" style="color:#ffff00">A3</label></span>
+<span style="left:260px;"><input type="checkbox" id="c4" value="Connect"><label for="c4" style="color:#ff00ff">A4</label></span>
+<span style="left:310px;"><input type="checkbox" id="c5" value="Connect"><label for="c5" style="color:#00ffff">A5</label></span>
+<span style="left:410px;">Division:<select id="dur"><option value="100">100ms</option><option value="200">200ms</option><option value="500">500ms</option><option value="1000">1sec</option></select></span>
+</div>
+</menu>
+<a href="gauge.htm">Gauge</a>&nbsp;|&nbsp;<a href="bargraph.htm">Bar Graph</a>&nbsp;|&nbsp;Analog Analyser&nbsp;|&nbsp;<a href="digital.htm">Digital Analyser</a>
+<span style="top:100px;">1024</span>
+<span style="top:125px;">896</span>
+<span style="top:150px;">768</span>
+<span style="top:175px;">640</span>
+<span style="top:200px;">512</span>
+<span style="top:225px;">384</span>
+<span style="top:250px;">256</span>
+<span style="top:275px;">128</span>
+<span style="top:295px;">0</span> 
+<script type="text/javascript">
+function GetArduinoInputs(){
+	var request = new XMLHttpRequest();
+	request.onreadystatechange = function(){
+		if(this.readyState == 4 && this.status == 200 && this.responseXML!=null){
+			updateGraph(parseInt(this.responseXML.getElementsByTagName('analog')[0].childNodes[0].nodeValue),
+			parseInt(this.responseXML.getElementsByTagName('analog')[1].childNodes[0].nodeValue),
+			parseInt(this.responseXML.getElementsByTagName('analog')[2].childNodes[0].nodeValue),
+			parseInt(this.responseXML.getElementsByTagName('analog')[3].childNodes[0].nodeValue),
+			parseInt(this.responseXML.getElementsByTagName('analog')[4].childNodes[0].nodeValue),
+			parseInt(this.responseXML.getElementsByTagName('analog')[5].childNodes[0].nodeValue));
+		}
+	}
+	request.open("GET", "ajax_inputs&random="+Math.random()*1000000,true);
+	request.send(null)
+	setTimeout('GetArduinoInputs()',document.getElementById('dur').value);
+}
+
+var canvas = document.getElementById('myCanvas');
+var ctx = canvas.getContext('2d');
+myCanvas.style.border = "red 1px solid";
+var aval0=[], aval1=[], aval2=[], aval3=[], aval4=[], aval5=[]; 
+
+for(cnt=0; cnt<18; cnt++){
+	aval0[cnt]=0;
+	aval1[cnt]=0;
+	aval2[cnt]=0;
+	aval3[cnt]=0;
+	aval4[cnt]=0;
+	aval5[cnt]=0;
+}
+
+function drawGraph(){initGraph(); updateGraph(0,0,0,0,0,0); GetArduinoInputs();}
+
+function initGraph(){
+	ctx.fillStyle="#ff0000";
+	ctx.font = "28px serif";
+	ctx.textAlign = "center";
+	ctx.fillText("ARDUINO ANALOG INPUT ANALYSER",290,30);
+}
+		
+function updateGraph(val0, val1, val2, val3, val4, val5){
+	ctx.clearRect(0, 30, canvas.width, canvas.height);
+	aval0.shift(); aval0.push(val0*2/10.23);
+	aval1.shift(); aval1.push(val1*2/10.23);
+	aval2.shift(); aval2.push(val2*2/10.23);
+	aval3.shift(); aval3.push(val3*2/10.23);
+	aval4.shift(); aval4.push(val4*2/10.23);
+	aval5.shift(); aval5.push(val5*2/10.23);
+	if(document.getElementById('c0').checked)drawPlot(0);
+	if(document.getElementById('c1').checked)drawPlot(1);
+	if(document.getElementById('c2').checked)drawPlot(2);
+	if(document.getElementById('c3').checked)drawPlot(3);
+	if(document.getElementById('c4').checked)drawPlot(4);
+	if(document.getElementById('c5').checked)drawPlot(5);
+}
+
+function drawPlot(barSel){
+	ctx.save();
+	ctx.beginPath();
+	ctx.lineWidth = 1;
+	ctx.strokeStyle = '#888888';
+	for(cnt=1; cnt<9; cnt++){
+		ctx.setLineDash([1,1]);
+		ctx.moveTo(0,75+cnt*25);
+		ctx.lineTo(525,75+cnt*25);
+		ctx.stroke();
+	}
+	for(cnt=1; cnt<18; cnt++){
+		ctx.moveTo(0+cnt*30,90);
+		ctx.lineTo(0+cnt*30,300);
+		ctx.stroke();
+	}
+	ctx.restore();
+	ctx.beginPath();
+	switch(barSel){
+		case 0 : ctx.moveTo(0,300-aval0[0]); break;
+		case 1 : ctx.moveTo(0,300-aval1[0]); break;
+		case 2 : ctx.moveTo(0,300-aval2[0]); break;
+		case 3 : ctx.moveTo(0,300-aval3[0]); break;
+		case 4 : ctx.moveTo(0,300-aval4[0]); break;
+		default : ctx.moveTo(0,300-aval5[0]); 
+	}
+	for(cnt=1; cnt<18; cnt++){
+		switch(barSel){
+			case 0 : ctx.lineTo(cnt*30,300-aval0[cnt]); ctx.strokeStyle = '#ff0000'; break;
+			case 1 : ctx.lineTo(cnt*30,300-aval1[cnt]); ctx.strokeStyle = '#00ff00'; break;
+			case 2 : ctx.lineTo(cnt*30,300-aval2[cnt]); ctx.strokeStyle = '#0000ff'; break;
+			case 3 : ctx.lineTo(cnt*30,300-aval3[cnt]); ctx.strokeStyle = '#ffff00'; break;
+			case 4 : ctx.lineTo(cnt*30,300-aval4[cnt]); ctx.strokeStyle = '#ff00ff'; break;
+			default : ctx.lineTo(cnt*30,300-aval5[cnt]); ctx.strokeStyle = '#00ffff';
+		}
+		ctx.lineWidth = 3;
+		ctx.stroke();
+	}
+}
+</script>
+</body>
+</html>

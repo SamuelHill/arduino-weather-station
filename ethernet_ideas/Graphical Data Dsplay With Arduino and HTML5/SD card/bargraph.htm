@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<head><title>Bargraph</title>
+</head>
+<body id="test" onload="drawGraph();">
+<canvas id="myCanvas" width="570" height="330"></canvas><br >
+<a href="gauge.htm">Gauge</a>&nbsp;|&nbsp;Bar Graph&nbsp;|&nbsp;<a href="analog.htm">Analog Analyser</a>&nbsp;|&nbsp;<a href="digital.htm">Digital Analyser</a>
+<script type="text/javascript">
+function GetArduinoInputs(){
+	var request = new XMLHttpRequest();
+	request.onreadystatechange = function(){
+		if(this.readyState == 4 && this.status == 200 && this.responseXML!=null){
+			updateGraph(parseInt(this.responseXML.getElementsByTagName('analog')[0].childNodes[0].nodeValue),
+			parseInt(this.responseXML.getElementsByTagName('analog')[1].childNodes[0].nodeValue),
+			parseInt(this.responseXML.getElementsByTagName('analog')[2].childNodes[0].nodeValue),
+			parseInt(this.responseXML.getElementsByTagName('analog')[3].childNodes[0].nodeValue),
+			parseInt(this.responseXML.getElementsByTagName('analog')[4].childNodes[0].nodeValue),
+			parseInt(this.responseXML.getElementsByTagName('analog')[5].childNodes[0].nodeValue));
+		}
+	}
+	request.open("GET", "ajax_inputs&random="+Math.random()*1000000,true);
+	request.send(null)
+	setTimeout('GetArduinoInputs()',200);
+}
+var canvas = document.getElementById('myCanvas');
+var ctx = canvas.getContext('2d');
+myCanvas.style.border = "red 1px solid";
+
+function drawGraph(){updateGraph(0,0,0,0,0,0); GetArduinoInputs();}
+	
+function updateGraph(val0, val1, val2, val3, val4, val5){
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	drawBar(0, val0);
+	drawBar(1, val1);
+	drawBar(2, val2);
+	drawBar(3, val3);
+	drawBar(4, val4);
+	drawBar(5, val5);
+	ctx.fillStyle="#ff0000";
+	ctx.font = "28px serif";
+	ctx.textAlign = "center";
+	ctx.fillText("ARDUINO ANALOG INPUT VALUES",290,30);
+}
+
+function drawBar(barSel, barVal){
+	var graphX = 30+barSel*90;
+	var graphY = parseInt(barVal*2.5/10.23);
+	var grd1=ctx.createLinearGradient(0,graphY,0,300);
+	switch(barSel){
+		case 0 : grd1.addColorStop(0,"#ff0000"); break;
+		case 1 : grd1.addColorStop(0,"#00ff00"); break;
+		case 2 : grd1.addColorStop(0,"#0000ff"); break;
+		case 3 : grd1.addColorStop(0,"#ffff00"); break;
+		case 4 : grd1.addColorStop(0,"#ff00ff"); break;
+		default : grd1.addColorStop(0,"#00ffff"); 
+	}
+	grd1.addColorStop(1,"white");
+	ctx.beginPath();
+	ctx.rect(graphX,300-graphY,60,graphY);
+	ctx.lineWidth = 2;
+	ctx.strokeStyle = '#000000';
+	ctx.stroke();
+	ctx.fillStyle=grd1;
+	ctx.fillRect(graphX,300-graphY,60,graphY);
+	ctx.fillStyle="#000000";
+	ctx.font = "16px serif";
+	ctx.fillText(barVal,graphX+25,295-graphY);
+	ctx.fillText("A"+barSel,graphX+20,320);
+}
+</script>
+</body>
+</html>

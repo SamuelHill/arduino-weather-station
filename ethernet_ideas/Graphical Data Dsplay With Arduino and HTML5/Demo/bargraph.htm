@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html>
+<head><title>Bargraph</title>
+</head>
+<body id="test" onload="drawGraph();">
+<canvas id="myCanvas" width="570" height="330"></canvas><br >
+<a href="gauge.htm">Gauge</a>&nbsp;|&nbsp;Bar Graph&nbsp;|&nbsp;<a href="analog.htm">Analog Analyser</a>&nbsp;|&nbsp;<a href="digital.htm">Digital Analyser</a>
+<br><br><b>Test without Arduino; set values by below entries</b><br>
+A0:<input id="needleVal0" type="text" value="750" /><br />
+A1:<input id="needleVal1" type="text" value="900" /><br />
+A2:<input id="needleVal2" type="text" value="800" /><br />
+A3:<input id="needleVal3" type="text" value="550" /><br />
+A4:<input id="needleVal4" type="text" value="600" /><br />
+A5:<input id="needleVal5" type="text" value="1023" /><br />
+<input type="button" value="set values" onClick="GetArduinoInputs()" /><br /> 
+<script type="text/javascript">
+
+function GetArduinoInputs(){ //DEMO only
+	updateGraph(parseInt(document.getElementById('needleVal0').value),
+	parseInt(document.getElementById('needleVal1').value),
+	parseInt(document.getElementById('needleVal2').value),
+	parseInt(document.getElementById('needleVal3').value),
+	parseInt(document.getElementById('needleVal4').value),
+	parseInt(document.getElementById('needleVal5').value));
+}
+
+var canvas = document.getElementById('myCanvas');
+var ctx = canvas.getContext('2d');
+myCanvas.style.border = "red 1px solid";
+
+
+function drawGraph(){updateGraph(0,0,0,0,0,0); GetArduinoInputs();}
+
+function updateGraph(val0, val1, val2, val3, val4, val5){
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	drawBar(0, val0);
+	drawBar(1, val1);
+	drawBar(2, val2);
+	drawBar(3, val3);
+	drawBar(4, val4);
+	drawBar(5, val5);
+	ctx.fillStyle="#ff0000";
+	ctx.font = "28px serif";
+	ctx.textAlign = "center";
+	ctx.fillText("ARDUINO ANALOG INPUT VALUES",290,30);
+}
+function drawBar(barSel, barVal){
+	var graphX = 30+barSel*90;
+	var graphY = parseInt(barVal*2.5/10.23);
+	var grd1=ctx.createLinearGradient(0,graphY,0,300);
+	
+	switch(barSel){
+		case 0 : grd1.addColorStop(0,"#ff0000"); break;
+		case 1 : grd1.addColorStop(0,"#00ff00"); break;
+		case 2 : grd1.addColorStop(0,"#0000ff"); break;
+		case 3 : grd1.addColorStop(0,"#ffff00"); break;
+		case 4 : grd1.addColorStop(0,"#ff00ff"); break;
+		default : grd1.addColorStop(0,"#00ffff"); 
+	}
+	
+	grd1.addColorStop(1,"white");
+	ctx.beginPath();
+	ctx.rect(graphX,300-graphY,60,graphY);
+	ctx.lineWidth = 2;
+	ctx.strokeStyle = '#000000';
+	ctx.stroke();
+	ctx.fillStyle=grd1;
+	ctx.fillRect(graphX,300-graphY,60,graphY);
+	ctx.fillStyle="#000000";
+	ctx.font = "16px serif";
+	ctx.fillText(barVal,graphX+25,295-graphY);
+	ctx.fillText("A"+barSel,graphX+20,320);
+}
+</script>
+
+</body>
+   
+</html>

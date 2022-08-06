@@ -1,0 +1,125 @@
+<!DOCTYPE HTML>
+<html>
+<head><title>Arduino Digial Input Analyser</title>
+<style>
+span{position:absolute; left:540px; top:50px;}
+</style>
+</head>
+<body id="test" onload="drawGraph();">
+<canvas id="myCanvas" width="570" height="300"></canvas>
+<menu id="menu_items" >
+<div >
+<span style="left:60px;"><input type="checkbox" id="c0" checked><label for="c0" style="color:#ff0000">D5</label></span>
+<span style="left:110px;"><input type="checkbox" id="c1" checked ><label for="c1" style="color:#00ff00">D6</label></span>
+<span style="left:160px;"><input type="checkbox" id="c2" checked ><label for="c2" style="color:#0000ff">D7</label></span>
+<span style="left:210px;"><input type="checkbox" id="c3" checked ><label for="c3" style="color:#ff00ff">D8</label></span>
+<span style="left:410px;">Division:<select id="dur"><option value="100">100ms</option><option value="200">200ms</option><option value="500">500ms</option><option value="1000">1sec</option></select></span>
+</div>
+</menu>
+<a href="gauge.htm">Gauge</a>&nbsp;|&nbsp;<a href="bargraph.htm">Bar Graph</a>&nbsp;|&nbsp;<a href="analog.htm">Analog Analyser</a>&nbsp;|&nbsp;Digital Analyser
+<span style="top:140px;">D8</span>
+<span style="top:190px;">D7</span>
+<span style="top:240px;">D6</span>
+<span style="top:290px;">D5</span>
+<script type="text/javascript">
+function GetArduinoInputs(){
+	var request = new XMLHttpRequest();
+	request.onreadystatechange = function(){
+	if(this.readyState == 4 && this.status == 200 && this.responseXML!=null){
+		updateGraph(this.responseXML.getElementsByTagName('digital')[0].childNodes[0].nodeValue,
+		this.responseXML.getElementsByTagName('digital')[1].childNodes[0].nodeValue,
+		this.responseXML.getElementsByTagName('digital')[2].childNodes[0].nodeValue,
+		this.responseXML.getElementsByTagName('digital')[3].childNodes[0].nodeValue);
+		}
+	}
+	request.open("GET", "ajax_inputs&random="+Math.random()*1000000,true);
+	request.send(null)
+	setTimeout('GetArduinoInputs()',document.getElementById('dur').value);
+}
+
+var canvas = document.getElementById('myCanvas');
+var ctx = canvas.getContext('2d');
+myCanvas.style.border = "red 1px solid";
+var aval0=[], aval1=[], aval2=[], aval3=[]; 
+
+for(cnt=0; cnt<18; cnt++){
+	aval0[cnt]=0;
+	aval1[cnt]=0;
+	aval2[cnt]=0;
+	aval3[cnt]=0;
+}
+
+function drawGraph(){initGraph(); updateGraph(0,0,0,0); GetArduinoInputs();}
+
+function initGraph(){
+	ctx.fillStyle="#ff0000";
+	ctx.font = "28px serif";
+	ctx.textAlign = "center";
+	ctx.fillText("ARDUINO DIGITAL INPUT ANALYSER",290,30);
+}
+function updateGraph(val0, val1, val2, val3){
+	ctx.clearRect(0, 30, canvas.width, canvas.height);
+	aval0.shift(); if(val0==1)aval0.push(25); else aval0.push(0);
+	aval1.shift(); if(val1==1)aval1.push(25); else aval1.push(0);
+	aval2.shift(); if(val2==1)aval2.push(25); else aval2.push(0);
+	aval3.shift(); if(val3==1)aval3.push(25); else aval3.push(0);
+	if(document.getElementById('c0').checked)drawPlot(0);
+	if(document.getElementById('c1').checked)drawPlot(1);
+	if(document.getElementById('c2').checked)drawPlot(2);
+	if(document.getElementById('c3').checked)drawPlot(3);
+}
+
+function drawPlot(barSel){
+	ctx.save();
+	ctx.beginPath();
+	ctx.lineWidth = 1;
+	ctx.strokeStyle = '#888888';
+	for(cnt=1; cnt<9; cnt++){
+		ctx.setLineDash([1,1]);
+		ctx.moveTo(0,75+cnt*25);
+		ctx.lineTo(525,75+cnt*25);
+		ctx.stroke();
+	}
+	for(cnt=1; cnt<18; cnt++){
+		ctx.moveTo(0+cnt*30,90);
+		ctx.lineTo(0+cnt*30,300);
+		ctx.stroke();
+	}
+	ctx.restore();
+	ctx.beginPath();
+	switch(barSel){
+		case 0 : ctx.moveTo(0,300-aval0[0]); break;
+		case 1 : ctx.moveTo(0,250-aval1[0]); break;
+		case 2 : ctx.moveTo(0,200-aval2[0]); break;
+		default : ctx.moveTo(0, 150-aval3[0]); 
+	}
+	for(cnt=1; cnt<18; cnt++){
+		switch(barSel){
+			case 0 : 
+				if(aval0[cnt]==aval0[cnt-1]) ctx.lineTo(cnt*30,300-aval0[cnt]);
+				if(aval0[cnt]>aval0[cnt-1]) { ctx.lineTo(cnt*30,300); ctx.lineTo(cnt*30,275);}
+				if(aval0[cnt]<aval0[cnt-1]) { ctx.lineTo(cnt*30,275); ctx.lineTo(cnt*30,300);}
+				ctx.strokeStyle = '#ff0000'; break;
+			case 1 : 
+				if(aval1[cnt]==aval1[cnt-1]) ctx.lineTo(cnt*30,250-aval1[cnt]);
+				if(aval1[cnt]>aval1[cnt-1]) { ctx.lineTo(cnt*30,250); ctx.lineTo(cnt*30,225);}
+				if(aval1[cnt]<aval1[cnt-1]) { ctx.lineTo(cnt*30,225); ctx.lineTo(cnt*30,250);}
+				ctx.strokeStyle = '#00ff00'; break;
+			case 2 : 
+				if(aval2[cnt]==aval2[cnt-1]) ctx.lineTo(cnt*30,200-aval2[cnt]);
+				if(aval2[cnt]>aval2[cnt-1]) { ctx.lineTo(cnt*30,200); ctx.lineTo(cnt*30,175);}
+				if(aval2[cnt]<aval2[cnt-1]) { ctx.lineTo(cnt*30,175); ctx.lineTo(cnt*30,200);}
+				ctx.strokeStyle = '#0000ff'; break;
+			default : 
+				if(aval3[cnt]==aval3[cnt-1]) ctx.lineTo(cnt*30,150-aval3[cnt]);
+				if(aval3[cnt]>aval3[cnt-1]) { ctx.lineTo(cnt*30,150); ctx.lineTo(cnt*30,125);}
+				if(aval3[cnt]<aval3[cnt-1]) { ctx.lineTo(cnt*30,125); ctx.lineTo(cnt*30,150);}
+				ctx.strokeStyle = '#ff00ff'; break;
+		}
+		ctx.lineWidth = 3;
+		ctx.stroke();
+	}
+}
+</script>
+</body>
+</html>
